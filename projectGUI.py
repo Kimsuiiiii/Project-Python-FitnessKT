@@ -4,12 +4,14 @@ from tkinter import ttk
 import tkinter.messagebox
 import sqlite3
 import datetime
+import time
 
+global timeend
 conn=sqlite3.connect('projectfitness.db')
 c = conn.cursor()
 
 #date = datetime.datetime.now()
-date = datetime.datetime(2023,2,15)
+date = datetime.datetime(2024,2,9)
 
 root = Tk()
 root.title("💪 KT Fitness 💪")
@@ -26,7 +28,7 @@ def tohome() :
     preend = date
     name = txt.get()
     Addrss = txt1.get()
-    tel = txt2.get()
+    tel1 = txt2.get()
     email = txt3.get()
     password = txt4.get()
     promotion = promo.get()
@@ -47,17 +49,18 @@ def tohome() :
         tkinter.messagebox.showinfo('แจ้งเตือน','กรอกชื่อด้วยตัวอักษร')
         txt.set('')
     else :
-        if tel.isnumeric() == False and len(tel) != 10 :
+        if tel1.isnumeric() == False and len(tel1) != 10 :
             tkinter.messagebox.showinfo('แจ้งเตือน','เบอร์โทรศัพท์ไม่ถูกต้อง')
             txt2.set('')
         else :
-            data = (name,Addrss,tel,email,password,promotion,datestr,end1)
+            data = (name,Addrss,tel1,email,password,promotion,datestr,end1)
             c.execute ('INSERT INTO FitnessKT(Name,Address,Tel,Email,Password,Promotion,วันที่สมัคร,สิ้นสุดการเป็นสมาชิก)VALUES(?,?,?,?,?,?,?,?)',data)
             conn.commit()
             tkinter.messagebox.showinfo('แจ้งเตือน','บันทึกข้อมูลแล้ว ทำการเข้าสู่ระบบได้')
             mywind.destroy()
 
 def login2() :
+    global tel,timeend
     tel = telll.get()
     password = passs.get()
     b=c.execute("""SELECT Tel FROM FitnessKT""")
@@ -187,12 +190,25 @@ def page2() :
 bt1 = Button(root,text='เข้าสู่ระบบ',fg='white',font=15,bg='blue',command = login).place(x=200,y=150)
 bt2 = Button(root,text='สมัครสมาชิก',fg='white',font=15,bg='green',command = page2).place(x=189,y=200)
 
-
-
-
-#กล่องข้อความ
-# txt=StringVar()
-# MyText = Entry(root,textvariable=txt).pack()
-
-# button1 = Button(root,text=)
 root.mainloop()
+
+for i in range(30) :
+    c.execute('SELECT Tel FROM FitnessKT')
+    k = c.fetchall()
+    alltel = []
+    for i in range(len(k)):
+        alltel.append(k[i][0])
+    for i in alltel:
+        enddb =c.execute("""SELECT สิ้นสุดการเป็นสมาชิก FROM FitnessKT WHERE Tel = ?""",(i,))
+        e = enddb.fetchall()
+        tobeend = e[0][0]
+        datestr = date.strftime('%d-%m-%Y')
+        datef = datetime.datetime.strptime(datestr, '%d-%m-%Y')
+        end = datetime.datetime.strptime(tobeend,'%d-%m-%Y')
+        endleft = str(end - datef)
+        endlefts = endleft.split(' ') 
+        timeend = int(endlefts[0])
+        if timeend <= 0 :
+            c.execute('delete from FitnessKT where Tel = ?',(i,))
+            conn.commit()
+            time.sleep(86400)
